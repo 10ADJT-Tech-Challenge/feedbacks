@@ -7,6 +7,17 @@ on:
     branches:
       - main # Executa automaticamente ao fazer push na branch 'main'
   workflow_dispatch: # Permite a execução manual do workflow pela interface do GitHub
+    inputs:
+      ambiente:
+        description: 'Selecione o ambiente para o deploy:'
+        required: true
+        default: 'dev_mateus'
+        type: choice
+        options:
+          - dev_mateus
+          - dev_levi
+          - dev_gabriel
+          - dev_lucas
 
 # Variáveis de ambiente compartilhadas entre todos os jobs e steps.
 env:
@@ -17,7 +28,8 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest # Utiliza ambiente Windows (necessário caso scripts ou ferramentas dependam de caminhos/recursos específicos do Windows)
-    
+    environment: ${{ inputs.ambiente }}
+
     # Permissões necessárias para autenticação segura no Azure via OIDC (OpenID Connect)
     permissions:
       id-token: write # Permite gerar o token JWT necessário para autenticar com o provedor de nuvem (Azure) sem uso de senhas expostas
