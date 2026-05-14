@@ -1,0 +1,63 @@
+name: Build e deploy projeto Quarkus para Azure Function App - avaliacoes-tc-4
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_FUNCTIONAPP_NAME: avaliacoes-tc-4 # nome da function app no Azure
+  PACKAGE_DIRECTORY: '.' # diretório que contém pom.xml
+  JAVA_VERSION: '21' # versão Java
+
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    permissions:
+      id-token: write # Isto é necessário para solicitar o JWT
+      contents: read # Isto é necessário para actions/checkout
+
+    steps:
+      - name: 'Fazer checkout do GitHub Action'
+        uses: actions/checkout@v6
+
+      - name: Configurar Java Sdk ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'microsoft'
+          cache: 'maven' # cache das dependências da aplicação
+
+      - name: 'Restaurar Dependências do Projeto Usando Mvn'
+        shell: pwsh
+        run: |
+          pushd './${{ env.PACKAGE_DIRECTORY }}'
+          mvn clean package
+          popd
+
+      - name: 'Descobrir diretório do pacote gerado'
+        id: find-package
+        shell: pwsh
+        run: |
+          # Entra na pasta azure-functions e pega a primeira pasta gerada (com o timestamp dinâmico)
+          $funcDir = Get-ChildItem -Path './${{ env.PACKAGE_DIRECTORY }}/target/azure-functions' -Directory | Select-Object -First 1
+          Write-Host "Pasta dinâmica encontrada: $($funcDir.FullName)"
+          
+          # Salva o caminho exato dessa pasta como uma variável de ambiente para o próximo step
+          echo "FUNC_PACKAGE_PATH=$($funcDir.FullName)" >> $env:GITHUB_ENV
+
+      - name: Fazer login no Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_26A3F7D510BC4C64922B3248045779C5 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_31D03D16C9614FD5A540D556DC68B117 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_789AC816C7794732888C4103D97160B9 }}
+
+      - name: 'Executar Azure Functions Action'
+        uses: Azure/functions-action@v1
+        id: fa
+        with:
+          app-name: '${{env.AZURE_FUNCTIONAPP_NAME}}'
+          slot-name: 'Production'
+          package: '${{ env.FUNC_PACKAGE_PATH }}'
