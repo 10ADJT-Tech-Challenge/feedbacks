@@ -1,63 +1,75 @@
+# Workflow para construção e implantação de um projeto Quarkus como uma Azure Function.
 name: Build e deploy projeto Quarkus para Azure Function App - avaliacoes-tc-4
 
+# Define os gatilhos (triggers) que iniciarão este workflow.
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - main # Executa automaticamente ao fazer push na branch 'main'
+  workflow_dispatch: # Permite a execução manual do workflow pela interface do GitHub
 
+# Variáveis de ambiente compartilhadas entre todos os jobs e steps.
 env:
-  AZURE_FUNCTIONAPP_NAME: avaliacoes-tc-4 # nome da function app no Azure
-  PACKAGE_DIRECTORY: '.' # diretório que contém pom.xml
-  JAVA_VERSION: '21' # versão Java
+  AZURE_FUNCTIONAPP_NAME: avaliacoes-tc-4 # Nome do recurso da Function App no Azure
+  PACKAGE_DIRECTORY: '.' # Diretório raiz do projeto onde o arquivo pom.xml está localizado
+  JAVA_VERSION: '21' # Versão do Java utilizada para compilar e executar a aplicação
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest
+    runs-on: windows-latest # Utiliza ambiente Windows (necessário caso scripts ou ferramentas dependam de caminhos/recursos específicos do Windows)
+    
+    # Permissões necessárias para autenticação segura no Azure via OIDC (OpenID Connect)
     permissions:
-      id-token: write # Isto é necessário para solicitar o JWT
-      contents: read # Isto é necessário para actions/checkout
+      id-token: write # Permite gerar o token JWT necessário para autenticar com o provedor de nuvem (Azure) sem uso de senhas expostas
+      contents: read # Permite ler o código fonte do repositório durante o checkout
 
     steps:
-      - name: 'Fazer checkout do GitHub Action'
+      # Passo 1: Baixar o código-fonte do repositório para o ambiente onde o job está rodando
+      - name: 'Fazer checkout do repositório'
         uses: actions/checkout@v6
 
+      # Passo 2: Configurar o ambiente Java com suporte a cache do Maven para acelerar as execuções seguintes
       - name: Configurar Java Sdk ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
-          distribution: 'microsoft'
-          cache: 'maven' # cache das dependências da aplicação
+          distribution: 'microsoft' # Distribuição do JDK otimizada pela Microsoft (sugerida para deployments na nuvem Azure)
+          cache: 'maven' # Habilita o cache das dependências do Maven (pasta ~/.m2), reduzindo tempo de build
 
-      - name: 'Restaurar Dependências do Projeto Usando Mvn'
-        shell: pwsh
+      # Passo 3: Executar a compilação do projeto e empacotamento com o Maven
+      - name: 'Construir o projeto usando Maven'
+        shell: pwsh # Usa PowerShell como shell de execução
         run: |
           pushd './${{ env.PACKAGE_DIRECTORY }}'
-          mvn clean package
+          mvn clean package # 'clean' remove builds anteriores e 'package' gera o novo build, incluindo plugins como o azure-functions-maven-plugin
           popd
 
-      - name: 'Descobrir diretório do pacote gerado'
+      # Passo 4: O plugin do Azure Functions para Maven gera arquivos numa pasta com nome dinâmico dentro de 'target/azure-functions/'.
+      # Este step localiza a exata pasta onde o deployable foi gerado e salva em uma variável para ser usada no step final.
+      - name: 'Descobrir diretório do pacote gerado pelo build'
         id: find-package
         shell: pwsh
         run: |
-          # Entra na pasta azure-functions e pega a primeira pasta gerada (com o timestamp dinâmico)
+          # Acessa o diretório target e pega a primeira pasta listada (que contém os binários prontos para a função Azure)
           $funcDir = Get-ChildItem -Path './${{ env.PACKAGE_DIRECTORY }}/target/azure-functions' -Directory | Select-Object -First 1
-          Write-Host "Pasta dinâmica encontrada: $($funcDir.FullName)"
+          Write-Host "Pasta dinâmica encontrada para deploy: $($funcDir.FullName)"
           
-          # Salva o caminho exato dessa pasta como uma variável de ambiente para o próximo step
+          # Registra a pasta dinamicamente descoberta como variável de ambiente (FUNC_PACKAGE_PATH) disponibilizando-a para os próximos steps
           echo "FUNC_PACKAGE_PATH=$($funcDir.FullName)" >> $env:GITHUB_ENV
 
+      # Passo 5: Autenticação no Azure usando as credenciais configuradas como secrets no repositório GitHub
       - name: Fazer login no Azure
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_26A3F7D510BC4C64922B3248045779C5 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_31D03D16C9614FD5A540D556DC68B117 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_789AC816C7794732888C4103D97160B9 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_26A3F7D510BC4C64922B3248045779C5 }} # ID do aplicativo (Client ID) no Azure AD
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_31D03D16C9614FD5A540D556DC68B117 }} # ID do diretório (Tenant ID) no Azure AD
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_789AC816C7794732888C4103D97160B9 }} # ID da assinatura no Azure
 
-      - name: 'Executar Azure Functions Action'
+      # Passo 6: Efetivar o deploy do pacote no ambiente de produção da Azure Function
+      - name: 'Executar Deploy para Azure Functions'
         uses: Azure/functions-action@v1
         id: fa
         with:
           app-name: '${{env.AZURE_FUNCTIONAPP_NAME}}'
-          slot-name: 'Production'
-          package: '${{ env.FUNC_PACKAGE_PATH }}'
+          slot-name: 'Production' # O slot alvo padrão, 'Production' é onde a aplicação entra em produção
+          package: '${{ env.FUNC_PACKAGE_PATH }}' # Refere-se à pasta dinâmica mapeada no passo 4
