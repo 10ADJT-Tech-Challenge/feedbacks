@@ -21,7 +21,7 @@ on:
 
 # Variáveis de ambiente compartilhadas entre todos os jobs e steps.
 env:
-  AZURE_FUNCTIONAPP_NAME: avaliacoes-tc-4 # Nome do recurso da Function App no Azure
+  AZURE_FUNCTIONAPP_NAME: ${{ secrets.AZURE_FUNCTIONAPP_NAME }} # Nome do recurso da Function App no Azure
   PACKAGE_DIRECTORY: '.' # Diretório raiz do projeto onde o arquivo pom.xml está localizado
   JAVA_VERSION: '21' # Versão do Java utilizada para compilar e executar a aplicação
 
