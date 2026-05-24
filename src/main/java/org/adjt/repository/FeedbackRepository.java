@@ -15,4 +15,8 @@ public class FeedbackRepository implements PanacheRepositoryBase<Feedback, UUID>
     public List<Feedback> findByPeriodo(LocalDateTime inicio, LocalDateTime fim) {
         return list("dataEnvio >= ?1 and dataEnvio <= ?2", Sort.ascending("dataEnvio"), inicio, fim);
     }
+
+    public void salvar(Feedback feedback) {
+        persist(feedback);
+    }
 }
