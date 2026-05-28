@@ -5,6 +5,7 @@ import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.TimerTrigger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import org.adjt.dto.RelatorioSemanalDTO;
 import org.adjt.service.EmailService;
 import org.adjt.service.RelatorioService;
@@ -27,6 +28,7 @@ public class RelatorioTimerFunction {
     @Inject
     EmailService emailService;
 
+    @Transactional
     @FunctionName("relatorio-semanal-timer")
     public void executar(
             @TimerTrigger(name = "timerInfo", schedule = "%RELATORIO_SCHEDULE%") String timerInfo,
@@ -35,7 +37,7 @@ public class RelatorioTimerFunction {
         context.getLogger().info("Timer acionado — iniciando geração do relatório semanal. Info: " + timerInfo);
         try {
             RelatorioSemanalDTO relatorio = relatorioService.gerarRelatorioSemanal();
-//            emailService.enviarRelatorioSemanal(relatorio);
+            emailService.enviarRelatorioSemanal(relatorio);
             context.getLogger().info(
                     "Relatório semanal gerado e enviado com sucesso. Total de avaliações: " + relatorio.totalAvaliacoes()
             );
