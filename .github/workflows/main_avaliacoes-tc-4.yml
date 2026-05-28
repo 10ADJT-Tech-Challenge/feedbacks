@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main # Executa automaticamente ao fazer push na branch 'main'
+      - feature/relatorio-semanal-dos-feedbacks
   workflow_dispatch: # Permite a execução manual do workflow pela interface do GitHub
     inputs:
       ambiente:

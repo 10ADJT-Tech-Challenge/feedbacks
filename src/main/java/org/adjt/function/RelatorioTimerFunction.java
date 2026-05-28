@@ -35,7 +35,7 @@ public class RelatorioTimerFunction {
         context.getLogger().info("Timer acionado — iniciando geração do relatório semanal. Info: " + timerInfo);
         try {
             RelatorioSemanalDTO relatorio = relatorioService.gerarRelatorioSemanal();
-            emailService.enviarRelatorioSemanal(relatorio);
+//            emailService.enviarRelatorioSemanal(relatorio);
             context.getLogger().info(
                     "Relatório semanal gerado e enviado com sucesso. Total de avaliações: " + relatorio.totalAvaliacoes()
             );
