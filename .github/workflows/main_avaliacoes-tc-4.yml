@@ -77,11 +77,29 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_31D03D16C9614FD5A540D556DC68B117 }} # ID do diretório (Tenant ID) no Azure AD
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_789AC816C7794732888C4103D97160B9 }} # ID da assinatura no Azure
 
+      - name: 'Configurar variáveis de ambiente no Function App'
+        run: |
+          az functionapp config appsettings set `
+            --name ${{ secrets.AZURE_FUNCTIONAPP_NAME }} `
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} `
+            --settings `
+              DB_URL="${{ secrets.DB_URL }}" `
+              DB_USERNAME="${{ secrets.DB_USERNAME }}" `
+              DB_PASSWORD="${{ secrets.DB_PASSWORD }}" `
+              MAIL_HOST="${{ secrets.MAIL_HOST }}" `
+              MAIL_PORT="${{ secrets.MAIL_PORT }}" `
+              MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" `
+              MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" `
+              MAIL_FROM="${{ secrets.MAIL_FROM }}" `
+              RELATORIO_EMAIL_DESTINATARIO="${{ secrets.RELATORIO_EMAIL_DESTINATARIO }}" `
+              'RELATORIO_SCHEDULE="0 0 0 * * 0"'
+        shell: pwsh
+
       # Passo 6: Efetivar o deploy do pacote no ambiente de produção da Azure Function
       - name: 'Executar Deploy para Azure Functions'
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: '${{env.AZURE_FUNCTIONAPP_NAME}}'
+          app-name: '${{secrets.AZURE_FUNCTIONAPP_NAME}}'
           slot-name: 'Production' # O slot alvo padrão, 'Production' é onde a aplicação entra em produção
           package: '${{ env.FUNC_PACKAGE_PATH }}' # Refere-se à pasta dinâmica mapeada no passo 4

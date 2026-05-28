@@ -1,4 +1,4 @@
-package org.adjt.infrastructure.entrypoints;
+package org.adjt.function;
 
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.annotation.FunctionName;

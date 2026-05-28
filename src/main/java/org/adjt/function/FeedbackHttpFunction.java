@@ -1,17 +1,15 @@
-package org.adjt.infrastructure.entrypoints;
+package org.adjt.function;
 
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
-import jakarta.inject.Inject;
-import org.adjt.application.services.FeedbackService;
 
 import java.util.Optional;
 
 public class FeedbackHttpFunction {
-    @Inject
-    FeedbackService service;
+//    @Inject
+//    FeedbackService service;
 
     @FunctionName("ReceberFeedback")
     public HttpResponseMessage run(
@@ -30,7 +28,7 @@ public class FeedbackHttpFunction {
         if (nota == null) {
             return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a 'grade' on the query string or in the request body").build();
         } else {
-            return request.createResponseBuilder(HttpStatus.CREATED).body(service.avaliacao(nota) + "\n Feedback salvo!").build();
+            return request.createResponseBuilder(HttpStatus.CREATED).body(10 + "\n Feedback salvo!").build();
         }
     }
 }
