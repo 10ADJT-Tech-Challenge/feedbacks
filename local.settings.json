@@ -1,7 +1,10 @@
 {
   "IsEncrypted": false,
   "Values": {
-    "AzureWebJobsStorage": "",
-    "FUNCTIONS_WORKER_RUNTIME": "java"
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "RELATORIO_SCHEDULE": "0 */30 * * * *",
+    "QUARKUS_PROFILE": "dev",
+    "languageWorkers__java__arguments": "-Dquarkus.profile=dev"
   }
 }

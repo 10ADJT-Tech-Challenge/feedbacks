@@ -16,6 +16,8 @@
         <quarkus.platform.version>3.35.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <azure-functions-maven-plugin.version>1.42.0</azure-functions-maven-plugin.version>
+        <azure.function.app.name>avaliacoes-1778625830017</azure.function.app.name>
     </properties>
 
     <dependencyManagement>
@@ -103,6 +105,15 @@
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-functions-maven-plugin</artifactId>
+                <version>${azure-functions-maven-plugin.version}</version>
+                <configuration>
+                    <appName>${azure.function.app.name}</appName>
+                    <artifactPath>${project.build.directory}/${project.build.finalName}-runner.jar</artifactPath>
+                </configuration>
             </plugin>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
