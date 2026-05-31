@@ -1,65 +1,77 @@
-# This workflow will build a Java project and deploy it to an Azure Functions App on Windows or Linux when a commit is pushed to your default branch.
-#
-# This workflow assumes you have already created the target Azure Functions app.
-# For instructions see https://learn.microsoft.com/en-us/azure/azure-functions/create-first-function-vs-code-java
-#
-# To configure this workflow:
-# 1. Set up the following secrets in your repository:
-#   - AZURE_FUNCTIONAPP_PUBLISH_PROFILE
-# 2. Change env variables for your configuration.
-#
-# For more information on:
-#   - GitHub Actions for Azure: https://github.com/Azure/Actions
-#   - Azure Functions Action: https://github.com/Azure/functions-action
-#   - Publish Profile: https://github.com/Azure/functions-action#using-publish-profile-as-deployment-credential-recommended
-#   - Azure Service Principal for RBAC: https://github.com/Azure/functions-action#using-azure-service-principal-for-rbac-as-deployment-credential
-#
-# For more samples to get started with GitHub Action workflows to deploy to Azure: https://github.com/Azure/actions-workflow-samples/tree/master/FunctionApp
-
-name: Deploy Java project to Azure Function App
+name: Deploy Java project to Azure Function App - dev_lucas
 
 on:
   push:
     branches: ["feature/notificacao-critico"]
 
 env:
-  AZURE_FUNCTIONAPP_NAME_HOMOLOG: 'feature-notificacoes'   # set this to your function app name on Azure
-  POM_XML_DIRECTORY: '.'                    # set this to the directory which contains pom.xml file
-  DISTRIBUTION: 'zulu'                      # set this to the java version to use (e.g. 'zulu', 'temurin', 'microsoft')
-  JAVA_VERSION: '21'                         # set this to the java version to use (e.g. '8', '11', '17')
+  AZURE_FUNCTIONAPP_NAME: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+  PACKAGE_DIRECTORY: '.'
+  JAVA_VERSION: '21'
 
 jobs:
   build-and-deploy:
-    runs-on: windows-latest # For Linux, use ubuntu-latest
-    environment: dev
+    runs-on: windows-latest
+    # Sem 'environment:' aqui — o subject OIDC fica como branch ref,
+    # que é exatamente o que o federated credential 'feature/notificacao-critico' espera.
+    permissions:
+      id-token: write
+      contents: read
+
     steps:
-    - name: 'Checkout GitHub Action'
-      uses: actions/checkout@v4
+      - name: 'Checkout'
+        uses: actions/checkout@v4
 
-    # If you want to use Azure RBAC instead of Publish Profile, then uncomment the task below
-    # - name: 'Login via Azure CLI'
-    #   uses: azure/login@v1
-    #   with:
-    #     creds: ${{ secrets.AZURE_RBAC_CREDENTIALS }} # set up AZURE_RBAC_CREDENTIALS secrets in your repository
+      - name: 'Configurar Java ${{ env.JAVA_VERSION }}'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'microsoft'
+          cache: 'maven'
 
-    - name: Setup Java Sdk ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        distribution: ${{ env.DISTRIBUTION }}
-        java-version: ${{ env.JAVA_VERSION }}
+      - name: 'Build com Maven'
+        shell: pwsh
+        run: |
+          pushd './${{ env.PACKAGE_DIRECTORY }}'
+          mvn clean package
+          popd
 
-    - name: 'Restore Project Dependencies Using Mvn'
-      shell: pwsh # For Linux, use bash
-      run: |
-        pushd './${{ env.POM_XML_DIRECTORY }}'
-        mvn clean package
-        popd
+      - name: 'Descobrir diretório do pacote'
+        id: find-package
+        shell: pwsh
+        run: |
+          $funcDir = Get-ChildItem -Path './${{ env.PACKAGE_DIRECTORY }}/target/azure-functions' -Directory | Select-Object -First 1
+          echo "FUNC_PACKAGE_PATH=$($funcDir.FullName)" >> $env:GITHUB_ENV
 
-    - name: 'Run Azure Functions Action'
-      uses: Azure/functions-action@v1
-      id: fa
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME_HOMOLOG }}
-        package: '${{ env.POM_XML_DIRECTORY }}' # if there are multiple function apps in same project, then this path will be like './${{ env.POM_XML_DIRECTORY }}/target/azure-functions/${{ env.POM_FUNCTIONAPP_NAME }'
-        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} # Remove publish-profile to use Azure RBAC
-        respect-pom-xml: true
+      - name: 'Login no Azure'
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }}
+
+      - name: 'Configurar variáveis no Function App'
+        shell: pwsh
+        run: |
+          az functionapp config appsettings set `
+            --name ${{ secrets.AZURE_FUNCTIONAPP_NAME_HOMOLOG }} `
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP_HOMOLOG }} `
+            --settings `
+              DB_URL="${{ secrets.DB_URL }}" `
+              DB_USERNAME="${{ secrets.DB_USERNAME }}" `
+              DB_PASSWORD="${{ secrets.DB_PASSWORD }}" `
+              MAIL_HOST="${{ secrets.MAIL_HOST }}" `
+              MAIL_PORT="${{ secrets.MAIL_PORT }}" `
+              MAIL_USERNAME="${{ secrets.MAIL_USERNAME }}" `
+              MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" `
+              MAIL_FROM="${{ secrets.MAIL_FROM }}" `
+              RELATORIO_EMAIL_DESTINATARIO="${{ secrets.RELATORIO_EMAIL_DESTINATARIO }}" `
+              APPLICATIONINSIGHTS_CONNECTION_STRING="${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}" `
+              'RELATORIO_SCHEDULE="0 0 0 * * 0"'
+
+      - name: 'Deploy para Azure Functions'
+        uses: Azure/functions-action@v1
+        with:
+          app-name: '${{ secrets.AZURE_FUNCTIONAPP_NAME }}'
+          slot-name: 'Production'
+          package: '${{ env.FUNC_PACKAGE_PATH }}'
