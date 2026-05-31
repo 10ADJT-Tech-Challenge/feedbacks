@@ -11,7 +11,7 @@ on:
       ambiente:
         description: 'Selecione o ambiente para o deploy:'
         required: true
-        default: 'dev_mateus'
+        default: 'dev_lucas'
         type: choice
         options:
           - dev_mateus
@@ -28,7 +28,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest # Utiliza ambiente Windows (necessário caso scripts ou ferramentas dependam de caminhos/recursos específicos do Windows)
-    environment: ${{ inputs.ambiente || 'dev_mateus' }}
+    environment: ${{ inputs.ambiente }}
 
     # Permissões necessárias para autenticação segura no Azure via OIDC (OpenID Connect)
     permissions:
@@ -73,9 +73,9 @@ jobs:
       - name: Fazer login no Azure
         uses: azure/login@v3
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID }} # ID do aplicativo (Client ID) no Azure AD
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID }} # ID do diretório (Tenant ID) no Azure AD
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID }} # ID da assinatura no Azure
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_26A3F7D510BC4C64922B3248045779C5 }} # ID do aplicativo (Client ID) no Azure AD
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_31D03D16C9614FD5A540D556DC68B117 }} # ID do diretório (Tenant ID) no Azure AD
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_789AC816C7794732888C4103D97160B9 }} # ID da assinatura no Azure
 
       - name: 'Configurar variáveis de ambiente no Function App'
         run: |
@@ -92,7 +92,6 @@ jobs:
               MAIL_PASSWORD="${{ secrets.MAIL_PASSWORD }}" `
               MAIL_FROM="${{ secrets.MAIL_FROM }}" `
               RELATORIO_EMAIL_DESTINATARIO="${{ secrets.RELATORIO_EMAIL_DESTINATARIO }}" `
-              APPLICATIONINSIGHTS_CONNECTION_STRING="${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}" `
               'RELATORIO_SCHEDULE="0 0 0 * * 0"'
         shell: pwsh
 
