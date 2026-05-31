@@ -51,7 +51,7 @@ class EmailServiceTest {
     void deveIncluirPalavraChaveNoAssunto() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        var mail = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0);
+        var mail = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0);
         assertTrue(mail.getSubject().contains("Relatório Semanal de Feedbacks"),
                 "Assunto deveria conter 'Relatório Semanal de Feedbacks'");
     }
@@ -60,7 +60,7 @@ class EmailServiceTest {
     void deveIncluirPeriodoNoAssunto() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        var mail = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0);
+        var mail = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0);
         // período: 2024-01-08 a 2024-01-15
         assertTrue(mail.getSubject().contains("2024-01-08"),
                 "Assunto deveria conter a data de início do período");
@@ -70,7 +70,7 @@ class EmailServiceTest {
     void corpoDeveSerHTML() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        var mail = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0);
+        var mail = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0);
         assertNotNull(mail.getHtml(), "E-mail deveria ter corpo HTML");
         assertTrue(mail.getHtml().startsWith("<!DOCTYPE html"),
                 "Corpo deveria ser HTML válido");
@@ -80,7 +80,7 @@ class EmailServiceTest {
     void corpoDeveConterSecaoDeUrgencias() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        String html = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0).getHtml();
+        String html = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0).getHtml();
         assertTrue(html.contains("Avaliações por Urgência"));
         assertTrue(html.contains("CRITICA"));
         assertTrue(html.contains("MEDIA"));
@@ -91,7 +91,7 @@ class EmailServiceTest {
     void corpoDeveConterSecaoPorDia() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        String html = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0).getHtml();
+        String html = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0).getHtml();
         assertTrue(html.contains("Avaliações por Dia"));
     }
 
@@ -99,7 +99,7 @@ class EmailServiceTest {
     void corpoDeveConterDetalhesDosFeedbacks() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        String html = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0).getHtml();
+        String html = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0).getHtml();
         assertTrue(html.contains("Detalhes dos Feedbacks"));
         assertTrue(html.contains("Aula ótima"));
         assertTrue(html.contains("Péssima qualidade de áudio"));
@@ -109,7 +109,7 @@ class EmailServiceTest {
     void corpoDeveConterTotaisEMedia() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        String html = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br").get(0).getHtml();
+        String html = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br").get(0).getHtml();
         assertTrue(html.contains("Total de avaliações"));
         assertTrue(html.contains("Média das notas"));
     }
