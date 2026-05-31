@@ -68,6 +68,7 @@ jobs:
               RELATORIO_EMAIL_DESTINATARIO="${{ secrets.RELATORIO_EMAIL_DESTINATARIO }}" `
               APPLICATIONINSIGHTS_CONNECTION_STRING="${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}" `
               FUNCTIONS_WORKER_RUNTIME="java" `
+              WEBSITE_RUN_FROM_PACKAGE="0" `
               'RELATORIO_SCHEDULE="0 0 0 * * 0"'
 
       - name: 'Deploy para Azure Functions'
@@ -76,11 +77,3 @@ jobs:
           app-name: '${{ secrets.AZURE_FUNCTIONAPP_NAME }}'
           slot-name: 'Production'
           package: '${{ env.FUNC_PACKAGE_PATH }}'
-
-      - name: 'Remover WEBSITE_RUN_FROM_PACKAGE'
-        shell: pwsh
-        run: |
-          az functionapp config appsettings delete `
-            --name ${{ secrets.AZURE_FUNCTIONAPP_NAME }} `
-            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} `
-            --setting-names WEBSITE_RUN_FROM_PACKAGE
