@@ -67,6 +67,7 @@ jobs:
               MAIL_FROM="${{ secrets.MAIL_FROM }}" `
               RELATORIO_EMAIL_DESTINATARIO="${{ secrets.RELATORIO_EMAIL_DESTINATARIO }}" `
               APPLICATIONINSIGHTS_CONNECTION_STRING="${{ secrets.APPLICATIONINSIGHTS_CONNECTION_STRING }}" `
+              FUNCTIONS_WORKER_RUNTIME="java" `
               'RELATORIO_SCHEDULE="0 0 0 * * 0"'
 
       - name: 'Deploy para Azure Functions'
