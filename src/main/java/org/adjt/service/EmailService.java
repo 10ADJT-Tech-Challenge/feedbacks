@@ -23,6 +23,29 @@ public class EmailService {
     @ConfigProperty(name = "relatorio.email.destinatario")
     String emailDestinatario;
 
+    public void enviarAlertaCritico(FeedbackResumoDTO feedback) {
+        String html = buildHtmlAlertaCritico(feedback);
+        String assunto = String.format("ALERTA: Feedback Crítico Recebido — Nota %d", feedback.nota());
+        mailer.send(Mail.withHtml(emailDestinatario, assunto, html));
+        LOG.info("Alerta de feedback crítico enviado para " + emailDestinatario + " — ID: " + feedback.id());
+    }
+
+    private String buildHtmlAlertaCritico(FeedbackResumoDTO f) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;color:#333'>");
+        sb.append("<h1 style='color:#cc0000'>Alerta: Feedback Crítico Recebido</h1>");
+        sb.append("<p style='color:#cc0000;font-weight:bold'>Um feedback com urgência CRÍTICA foi registrado e requer atenção imediata.</p>");
+        sb.append("<table style='border-collapse:collapse;margin-bottom:16px'>");
+        row(sb, "ID", f.id().toString());
+        row(sb, "Nota", String.valueOf(f.nota()));
+        row(sb, "Urgência", f.urgencia().name());
+        row(sb, "Data de Envio", f.dataEnvio().toString());
+        row(sb, "Descrição", f.descricao());
+        sb.append("</table>");
+        sb.append("</body></html>");
+        return sb.toString();
+    }
+
     public void enviarRelatorioSemanal(RelatorioSemanalDTO relatorio) {
         String html = buildHtml(relatorio);
         String assunto = String.format("Relatório Semanal de Feedbacks — %s a %s",
