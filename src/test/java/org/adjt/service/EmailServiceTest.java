@@ -35,8 +35,8 @@ class EmailServiceTest {
     void deveEnviarEmailParaDestinatarioCorreto() {
         emailService.enviarRelatorioSemanal(relatorioExemplo());
 
-        // "admin@techchallenge.com.br" é o valor default em application.properties
-        var emails = mailbox.getMailMessagesSentTo("admin@techchallenge.com.br");
+        // "rm367471@fiap.com.br" é o valor default em application.properties
+        var emails = mailbox.getMailMessagesSentTo("rm367471@fiap.com.br");
         assertEquals(1, emails.size());
     }
 
