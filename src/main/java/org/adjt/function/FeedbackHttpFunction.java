@@ -29,7 +29,7 @@ public class FeedbackHttpFunction {
 
     @FunctionName("ReceberFeedback")
     public HttpResponseMessage run(
-            @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION)
+            @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.ANONYMOUS)
             HttpRequestMessage<Optional<String>> request,
             @QueueOutput(name = "outputQueue", queueName = "feedbacks-criticos", connection = "AzureWebJobsStorage")
             OutputBinding<String> outputQueue,
